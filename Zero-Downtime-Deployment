@@ -1,0 +1,161 @@
+Zero downtime deployment with Swarm, HEALTHCHECK and Dnsrr:
+
+
+https://www.youtube.com/watch?v=dLBGoaMz7dQ
+
+https://github.com/BretFisher/browncoat
+
+https://www.youtube.com/watch?v=oWrwi1NiViw
+
+
+https://medium.com/better-programming/zero-downtime-deployment-with-docker-swarm-d84d8d9d9a14
+https://medium.com/better-programming/zero-downtime-deployment-with-docker-swarm-d84d8d9d9a14
+
+<if you update the nginx:1.18/latest image, you'll see that ninx run 6 replicas until the new image is stable!!
+Don't forget to install visualizer to see the process in live.
+/>  docker service create --name=viz --publish=8080:8080/tcp --constraint=node.role==manager --mount=type=bind,src=/var/run/docker.sock,dst=/var/run/docker.sock bretfisher/visualizer
+
+
+version: '3.7'
+services:
+  nginx:
+    image: "nginx:latest"
+
+    ports:
+      - '80:80'
+    deploy:
+      replicas: 4
+      update_config:
+        parallelism: 2
+        order: start-first
+        failure_action: rollback
+        delay: 10s
+      rollback_config:
+        parallelism: 0
+        order: stop-first
+      restart_policy:
+        condition: any
+        delay: 5s
+        max_attempts: 3
+        window: 120s
+    healthcheck:
+      test: ["CMD", "curl", "--fail", "http://18.218.210.112"]
+      interval: 20s
+      timeout: 10s
+      retries: 3
+
+
+/> docker stack deploy --compose-file=docker-compose.yml nginx
+
+
+================================================================================
+<Important project>
+
+
+vim dockerfile:
+
+FROM php:7.2.2-apache
+COPY ./index.php  /var/www/html
+RUN docker-php-ext-install mysqli
+
+<First, build the image,  docker build -t apach:latest . >
+--------------------------------------------------------------------------------
+
+vim index.php:
+
+
+<?php
+define('HOST', "18.218.210.112");
+define('DBUSER', "root");
+define('PASS', "1234");
+define('DB', "myexample");
+define('PORT', 3306);
+
+$link=mysqli_connect(HOST,DBUSER,PASS,DB,PORT);
+
+// Check connection
+if (mysqli_connect_errno($link)){
+    echo "Failure to connect: " . mysqli_connect_error();
+}
+
+$sql = "SELECT * FROM mytable";
+$result = $link->query($sql);
+
+if ($result->num_rows > 0) {
+    // output data of each row
+    while($row = $result->fetch_assoc()) {
+        echo  $row["myfield"]. "<br>";
+    }
+} else {
+    echo "0 results";
+}
+$link->close();
+?>
+--------------------------------------------------------------------------------
+ vim init.sql:
+
+
+CREATE DATABASE myexample;
+USE myexample;
+CREATE TABLE mytable (myfield VARCHAR(20));
+INSERT INTO mytable VALUES ('Hello'), ('Dolly');
+
+--------------------------------------------------------------------------------
+
+vim docker-compose.yml:
+
+version: '3.7'
+services:
+  db:
+    environment:
+      MYSQL_ROOT_PASSWORD: 1234
+    image: "mysql:5.7"
+    volumes:
+      - ./init.sql:/docker-entrypoint-initdb.d/init.sql
+      - data-mysql:/var/lib/mysql
+    ports:
+      - '3306:3306'
+    deploy:
+      replicas: 2
+    healthcheck:
+      test: ["CMD-SHELL", 'mysqladmin ping']
+      interval: 10s
+      timeout: 5s
+      retries: 10
+
+  nginx:
+    image: apach:latest
+    depends_on:
+      - db
+    ports:
+      - '80:80'
+    deploy:
+      replicas: 2
+      update_config:
+        parallelism: 2
+        order: start-first
+        failure_action: rollback
+        delay: 10s
+      rollback_config:
+        parallelism: 0
+        order: stop-first
+      restart_policy:
+        condition: any
+        delay: 5s
+        max_attempts: 3
+        window: 120s
+    healthcheck:
+      test: ["CMD", "curl", "--fail", "http://18.218.210.112"]
+      interval: 20s
+      timeout: 10s
+      retries: 3
+
+volumes:
+  data-mysql:
+    driver: local
+
+
+
+
+
+/>  docker stack deploy --compose-file=docker-compose.yml nginx
