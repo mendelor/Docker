@@ -1,0 +1,52 @@
+https://stackoverflow.com/questions/63075987/how-to-avoid-docker-stack-deploy-command-creating-new-volume?noredirect=1#comment111546123_63075987
+https://console.aws.amazon.com/support/home?region=us-east-2#/case/?displayId=7196704931&language=en
+
+** Also check (Plugin-xray, EFS-mounthing-docker-swarm  -  FILES)
+
+/> sudo lsof /var/lib/dpkg/lock
+/> sudo kill -9 2154
+/> echo "1234" > my_file_secret.txt
+
+
+                     < Install on both servers >
+
+/> docker plugin install rexray/efs EFS_ACCESSKEY=AKIAQMD5VILJUSWVBXVJ EFS_SECRETKEY=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 EFS_SECURITYGROUPS="sg-056b3ab75d625b983" EFS_TAG=rexray
+/> docker volume create
+/> docker volume create --driver rexray/efs --name test-efs-1
+/> sudo apt-get install -y nfs-common
+/> mkdir ~/efs-test-point
+/> sudo chmod go+rw efs-test-point
+/> sudo mount -t nfs -o nfsvers=4.1,rsize=1048576,wsize=1048576,hard,timeo=600,retrans=2,noresvport fs-a378cfdb.efs.us-east-2.amazonaws.com:/   ~/efs-test-point
+/> df -h
+/> docker stack deploy --compose-file=docker-compose.yml mysql
+
+version: '3.7'
+services:
+  db:
+    image: "mysql:5.7"
+    deploy:
+      replicas: 2
+    volumes:
+      - test-efs-1:/var/lib/mysql
+    ports:
+      - '3306:3306'
+    environment:
+      MYSQL_ROOT_PASSWORD_FILE: /run/secrets/my_file_secret
+    secrets:
+      - my_file_secret
+secrets:
+  my_file_secret:
+    file: ./my_file_secret.txt
+volumes:
+  test-efs-1:
+    driver: local
+    driver_opts:
+      type: nfs
+      o: addr=fs-2571c15d.efs.us-east-2.amazonaws.com,nfsvers=4.1,rsize=1048576,wsize=1048576,hard,timeo=600,retrans=2
+      device: fs-2571c15d.efs.us-east-2.amazonaws.com:/
+
+
+/> docker swarm init
+/> docker service create --name=viz --publish=8080:8080/tcp --constraint=node.role==manager --mount=type=bind,src=/var/run/docker.sock,dst=/var/run/docker.sock bretfisher/visualizer
+/> docker node promote <node_name>  Change to manager
+
