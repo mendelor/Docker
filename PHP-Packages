@@ -2,28 +2,25 @@ FROM php:7.2.2-apache
 
 COPY ./mydirectory/ /var/www/html
 RUN apt-get update && \
-      apt-get -yq install \
-      build-essential \
-      vim \
-      unzip \
-      wget \
-      zip
+     apt-get -yq install \
+     build-essential \
+     vim \
+     unzip \
+     wget \
+     zip
 
-RUN apt-get update -y
-RUN apt-get  install -y libcap2-bin
-#command to set user non root
-RUN setcap 'cap_net_bind_service=+ep' /usr/sbin/apache2
-RUN getcap /usr/sbin/apache2
+RUN apt-get update -y && \
+    apt-get  install -y libcap2-bin && \
+    setcap 'cap_net_bind_service=+ep' /usr/sbin/apache2 && \
+    getcap /usr/sbin/apache2 
+    
 USER www-data
 
-# EXPOSE 8080
+EXPOSE 8080
 
 HEALTHCHECK CMD curl --fail http://18.224.155.155:8080/ || exit 1
 
 /> docker run -d -p 8080:80 <img>
-
-
-
 
 
 
