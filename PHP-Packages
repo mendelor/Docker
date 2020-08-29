@@ -21,3 +21,15 @@ USER www-data
 HEALTHCHECK CMD curl --fail http://18.224.155.155:8080/ || exit 1
 
 /> docker run -d -p 8080:80 <img>
+
+
+
+
+
+
+
+
+
+
+
+https://github.com/bufferapp/dockerfiles/tree/master/apache-php
