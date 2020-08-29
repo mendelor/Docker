@@ -10,7 +10,7 @@ https://console.aws.amazon.com/support/home?region=us-east-2#/case/?displayId=71
 
                      < Install on both servers >
 
-/> docker plugin install rexray/efs EFS_ACCESSKEY=AKIAQMD5VILJUSWVBXVJ EFS_SECRETKEY=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 EFS_SECURITYGROUPS="sg-056b3ab75d625b983" EFS_TAG=rexray
+/> docker plugin install rexray/efs EFS_ACCESSKEY=AKIAQMD5VILJUS1111111 EFS_SECRETKEY=FIVEb9CpZ1111111110NErPZXbCNGGtFJUfRa6 EFS_SECURITYGROUPS="sg-056b3ab75d625b983" EFS_TAG=rexray
 /> docker volume create
 /> docker volume create --driver rexray/efs --name test-efs-1
 /> sudo apt-get install -y nfs-common
