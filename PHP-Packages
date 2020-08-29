@@ -1,5 +1,6 @@
 FROM php:7.2.2-apache
 
+COPY ./mydirectory/ /var/www/html
 RUN apt-get update && \
       apt-get -yq install \
       build-essential \
@@ -14,3 +15,8 @@ RUN apt-get  install -y libcap2-bin
 RUN setcap 'cap_net_bind_service=+ep' /usr/sbin/apache2
 RUN getcap /usr/sbin/apache2
 USER www-data
+
+
+HEALTHCHECK CMD curl --fail http://18.224.155.155:8080/ || exit 1
+
+/> docker run -d -p 8080:80 <img>
