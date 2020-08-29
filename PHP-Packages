@@ -16,6 +16,7 @@ RUN setcap 'cap_net_bind_service=+ep' /usr/sbin/apache2
 RUN getcap /usr/sbin/apache2
 USER www-data
 
+# EXPOSE 8080
 
 HEALTHCHECK CMD curl --fail http://18.224.155.155:8080/ || exit 1
 
