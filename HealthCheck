@@ -1,0 +1,100 @@
+<HEALTHCHECK I used in ECS (phtml) - CMD curl -f http://localhost:80 || exit 1>
+
+<HEALTHCHECK I used in ECS (phtml) - CMD-SHELL, mysqladmin ping>  Don't forget to add: interval: 10s, timeout: 5s, retries: 10
+** json for task definition in the bottom
+                                                        sudo service apache2 stop
+<PHP>
+FROM php:7.2.2-apache
+COPY ./mydirectory/ /var/www/html
+RUN docker-php-ext-install mysqli
+
+RUN apt-get update -y
+RUN apt-get  install -y libcap2-bin
+
+RUN setcap 'cap_net_bind_service=+ep' /usr/sbin/apache2
+RUN getcap /usr/sbin/apache2
+USER www-data
+
+
+HEALTHCHECK CMD curl --fail http://18.218.210.112:8080/ || exit 1
+
+//docker inspect --format='{{json .State.Health}}' <containerid>
+====================================================================
+
+<MySql>
+
+version: '3.0'
+services:
+ mysql:
+   image: mysql:5.7
+   environment:
+     MYSQL_ROOT_PASSWORD: password
+   ports:
+   - 3306:3306
+   healthcheck:
+     test: ["CMD-SHELL", 'mysqladmin ping']
+     interval: 10s
+     timeout: 5s
+     retries: 10
+
+https://stackoverflow.com/questions/53407287/docker-compose-wait-for-database-service-initialisation
+
+--------------------------------------------------------------------------------
+<Postgres>        I tried with version 2.1 and it works!!
+
+version: "3"
+services:
+  postgress:
+   image: postgres:11
+   environment:
+     POSTGRES_PASSWORD: postgres
+   healthcheck:
+     test: ["CMD-SHELL", "pg_isready -U postgres"]
+     interval: 10s
+     timeout: 5s
+     retries: 5
+   ports:
+   - 5432:5432
+
+
+
+   app:
+     ...
+     depends_on:
+       postgres:
+         condition: service_healthy
+
+
+
+// psql -h 172.22.0.2 -p 5432 -U postgres
+//  \l  - list all dbs
+//  \c template1  -  connect db template1
+
+
+https://dba.stackexchange.com/questions/1285/how-do-i-list-all-databases-and-tables-using-psql
+
+--------------------------------------------------------------------------------
+<Health check SWARM> Lecture 42
+
+https://github.com/BretFisher/browncoat
+https://hub.docker.com/r/bretfisher/browncoat
+
+
+
+// docker pull bretfisher/browncoat
+// docker service create --name firefly -p 80:80 --replicas 3 bretfisher/browncoat
+// docker run --rm bretfisher/httping -i .1 -GsY http://18.218.210.112/healthz  (you run on the third node)
+// docker events -f service=firefly    (you can run on the second node)
+--------------------------------------------------------------------------------
+<Health Check NGINX>   -Dockerfile-
+
+vim dockerfile:
+
+FROM nginx:1.17.7
+RUN apt-get update && apt-get install -y wget
+HEALTHCHECK CMD wget -q --method=HEAD localhost/system-status.txt
+
+// docker build -t ng .
+// docker run --name ng -p 80:80 ng
+
+https://medium.com/better-programming/docker-healthchecks-eb744bfe3f3b
