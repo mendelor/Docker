@@ -1,0 +1,107 @@
+Tomcat main page:  index.jsp
+/usr/local/tomcat/webapps/ROOT
+
+
+FROM tomcat:8.0-alpine
+
+LABEL maintainer="deepak@softwadaddasd.com"
+
+ADD sample.war /usr/local/tomcat/webapps/
+
+RUN addgroup tomcatusers && adduser -D tomcat && adduser tomcat tomcatusers
+
+RUN chown -R tomcat:tomcatusers .
+
+USER tomcat
+
+EXPOSE 8080
+
+CMD ["catalina.sh", "run"]
+
+
+
+docker build -t mywebapp .
+docker run -d -p 80:8080 mywebapp
+
+
+https://aspetraining.com/resources/blog/deploying-your-first-web-app-to-tomcat-on-docker
+
+
+=================================================================================================================================
+
+FROM tomcat
+MAINTAINER ardfdf@gmail.com
+
+COPY sample.war /usr/local/tomcat/webapps/
+
+CMD ["catalina.sh", "run"]
+
+
+// docker build -t tomi .
+// docker run -p 8080:8080 tomi
+
+
+https://github.com/ardydedase/docker-tomcat-war
+
+
+
+
+sudo service apache2 stop
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+--------------------------------------------------------------------------------
+<How to install Tomcat7 on EC2
+
+
+/> su -c "yum install java-1.8.0-openjdk"
+/> java -version
+/> wget http://www-us.apache.org/dist/tomcat/tomcat-7/v7.0.105/bin/apache-tomcat-7.0.105.tar.gz
+/> tar xzf apache-tomcat-7.0.105.tar.gz
+/> mv apache-tomcat-7.0.105 /usr/local/tomcat7
+/> cd /usr/local/tomcat7
+/> ./bin/startup.sh
+
+
+https://archive.apache.org/dist/tomcat/tomcat-7/
+https://tecadmin.net/steps-to-install-tomcat-server-on-centos-rhel/
+
+
+/> cd /usr/local/tomcat7/conf/
+/> vim tomcat-users.xml
+
+
+<?xml version="1.0" encoding="UTF-8"?>
+<tomcat-users>
+  <role rolename="manager-gui"/>
+  <role rolename="manager-script"/>
+  <role rolename="manager-jmx"/>
+  <role rolename="manager-status"/>
+  <role rolename="admin-gui"/>
+  <role rolename="admin-script"/>
+  <user username="admin" password="admin" roles="manager-gui,manager-script,manager-jmx,manager-status,admin-gui,admin-script"/>
+</tomcat-users>
+
+/> ./bin/shutdown.sh
+/> ./bin/startup.sh
+
+http://18.210....:8080/manager
+username: admin
+password: admin
+
+Add WAR.file  sample.war   click on sample  see the page !!!!!!
+
+WORKING!!!
