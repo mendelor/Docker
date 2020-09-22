@@ -29,3 +29,9 @@ vim authorized_keys
 Works!!!!!!!!!!!!!!!!!!!!!
 I run visualizer on the master to see where the container is running!!!
 Although you see the container from the server you create the context, it is running on the master 
+
+
+
+The docker context command makes it easy to export and import contexts on different machines with the Docker client installed.
+You can use the docker context export command to export an existing context to a file.
+This file can later be imported on another machine that has the docker client installed.
