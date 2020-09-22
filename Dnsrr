@@ -1,3 +1,49 @@
+docker stack deploy --compose-file=docker-compose.yml mysql
+
+version: '3.7'
+services:
+  db:
+    image: "mysql:5.7"
+    healthcheck:
+      test: ["CMD-SHELL", 'mysqladmin ping']
+      interval: 10s
+      timeout: 5s
+      retries: 10
+    ports:
+      - target: 3306
+        published: 3306
+        protocol: tcp
+        mode: host
+
+    deploy:
+      endpoint_mode: dnsrr
+      mode: "replicated"
+      replicas: 2
+      resources:
+        limits:
+          memory: 2G
+    volumes:
+      - foo:/var/lib/mysql
+
+    environment:
+      MYSQL_ROOT_PASSWORD_FILE: /run/secrets/my_file_secret
+    secrets:
+      - my_file_secret
+
+secrets:
+  my_file_secret:
+    file: ./my_file_secret.txt
+
+volumes:
+  foo:
+    driver: local
+    
+    
+=============================================================================================================================================
+
+
+
+
 version: '3.7'
 services:
   db:
