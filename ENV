@@ -1,0 +1,31 @@
+1. // vim .env
+USERNAME=Nya
+PASS=secretpassword
+DATABASE=mydatabase
+
+
+2. // vim dockerfile
+
+version: '3'
+services:
+  db:
+    image: "mysql:5.7"
+    container_name: 'mysqlcompose1'
+    volumes:
+      - data-mysql:/var/lib/mysql
+    networks:
+      - simple-network
+    ports:
+      - '3306:3306'
+    environment:
+      - MYSQL_ROOT_PASSWORD=${PASS}
+volumes:
+  data-mysql:
+    driver: local
+networks:
+  simple-network:
+
+
+
+3. // docker-compose config (To see which values are assigned to the environment)
+
