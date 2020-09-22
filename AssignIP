@@ -1,0 +1,12 @@
+docker network create --driver bridge --subnet 172.18.0.0/16 --gateway 172.18.0.1 docker-network
+
+docker run --name some-mysql -e MYSQL_ROOT_PASSWORD=my-secret-pw -d mysql:5.7
+
+docker network connect --ip 172.18.0.3 docker-network some-mysql
+
+
+docker run --name some-mysql --network=docker-network -e MYSQL_ROOT_PASSWORD=my-secret-pw -d mysql:5.7
+
+
+
+https://www.youtube.com/watch?v=IWpzLf4hBhk
