@@ -30,3 +30,36 @@ HEALTHCHECK CMD curl --fail http://18.224.155.155:8080/ || exit 1
 
 
 https://github.com/bufferapp/dockerfiles/tree/master/apache-php
+
+
+====================================================================================
+
+FROM php:7.2.2-apache
+
+COPY index.php  /var/www/html/
+
+RUN docker-php-ext-install mysqli  && \
+    docker-php-ext-install pdo_mysql
+RUN apt-get update && apt-get install -y \
+    vim \
+        wget \
+        unzip \
+        git \
+
+RUN { \
+# Zend OPcache
+                echo "opcache.enable=1"; \
+                echo 'opcache.enable_cli=1'; \
+                echo 'opcache.fast_shutdown=1'; \
+                echo 'opcache.interned_strings_buffer=16'; \
+                echo 'opcache.max_accelerated_files=4000'; \
+                echo 'opcache.memory_consumption=256'; \
+                echo 'opcache.revalidate_freq=0'; \
+        } > /usr/local/etc/php/conf.d/opcache-recommended.ini
+
+RUN apt-get update -y
+RUN apt-get  install -y libcap2-bin
+#command to set user non root
+RUN setcap 'cap_net_bind_service=+ep' /usr/sbin/apache2
+RUN getcap /usr/sbin/apache2
+USER www-data
