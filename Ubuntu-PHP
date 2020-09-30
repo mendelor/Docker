@@ -1,0 +1,52 @@
+FROM ubuntu:18.04
+
+ENV DEBIAN_FRONTEND=noninteractive
+
+RUN apt-get update && apt-get install -yq --no-install-recommends \
+    apt-utils \
+    curl \
+    # Install git
+    git \
+    # Install apache
+    apache2 \
+    # Install php 7.2
+    libapache2-mod-php7.2 \
+    php7.2-cli \
+    php7.2-json \
+    php7.2-curl \
+    php7.2-fpm \
+    php7.2-gd \
+    php7.2-ldap \
+    php7.2-mbstring \
+    php7.2-mysql \
+    php7.2-soap \
+    php7.2-sqlite3 \
+    php7.2-xml \
+    php7.2-zip \
+    php7.2-intl \
+    php-imagick \
+    # Install tools
+    openssl \
+    nano \
+    graphicsmagick \
+    imagemagick \
+    ghostscript \
+    mysql-client \
+    iputils-ping \
+    locales \
+    sqlite3 \
+    ca-certificates \
+    && apt-get clean && rm -f /var/www/html/index.html && rm -rf /var/lib/apt/lists/**
+
+ENV LANG en_US.utf8
+
+RUN groupadd --gid 5000 newuser \
+    && useradd --home-dir /home/newuser --create-home --uid 5000 \
+        --gid 5000 --shell /bin/sh --skel /dev/null newuser
+
+WORKDIR /var/www/html
+
+COPY index.php /var/www/html
+EXPOSE 80
+HEALTHCHECK --interval=5s --timeout=3s --retries=3 CMD curl -f http://18.224.147.172 || exit 1
+CMD ["apachectl", "-D", "FOREGROUND"]
