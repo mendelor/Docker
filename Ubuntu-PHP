@@ -48,5 +48,5 @@ WORKDIR /var/www/html
 
 COPY index.php /var/www/html
 EXPOSE 80
-HEALTHCHECK --interval=5s --timeout=3s --retries=3 CMD curl -f http://18.224.147.172 || exit 1
+HEALTHCHECK --interval=5s --timeout=3s --retries=3 CMD curl -f http://18.2224.172.142 || exit 1
 CMD ["apachectl", "-D", "FOREGROUND"]
