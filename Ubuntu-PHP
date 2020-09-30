@@ -46,7 +46,8 @@ RUN groupadd --gid 5000 newuser \
 
 WORKDIR /var/www/html
 
-COPY index.php /var/www/html
+COPY index.php .
 EXPOSE 80
 HEALTHCHECK --interval=5s --timeout=3s --retries=3 CMD curl -f http://18.2224.172.142 || exit 1
 CMD ["apachectl", "-D", "FOREGROUND"]
+#USER newuser
