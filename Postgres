@@ -1,3 +1,32 @@
+echo "1234" > my_file_secret.txt
+
+version: "3.1"
+services:
+  postgress:
+   image: postgres:11
+   environment:
+     POSTGRES_PASSWORD_FILE: /run/secrets/my_secret
+   secrets:
+     - my_secret
+   healthcheck:
+     test: ["CMD-SHELL", "pg_isready -U postgres"]
+     interval: 10s
+     timeout: 5s
+     retries: 5
+   ports:
+     - 5432:5432
+
+secrets:
+  my_secret:
+    file: ./my_file_secret.txt
+
+
+/> docker exec -it 83e239e2fbba psql -U postgres
+
+
+======================================================================
+
+
 version: "3"
 services:
   postgress:
