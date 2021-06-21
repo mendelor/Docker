@@ -1,11 +1,13 @@
-echo "1234" > my_file_secret.txt
+/> echo "1234" > my_file_secret.txt
 
 version: "3.1"
 services:
   postgress:
-   image: postgres:11
+   image: postgres:12
+   user: postgres
    environment:
      POSTGRES_PASSWORD_FILE: /run/secrets/my_secret
+     POSTGRES_USER: postgres
    secrets:
      - my_secret
    healthcheck:
@@ -15,6 +17,11 @@ services:
      retries: 5
    ports:
      - 5432:5432
+   container_name: postgres
+   volumes:
+      - pgvol:/var/lib/postgresql/data
+volumes:
+  pgvol:  #compose automatically creates that volume
 
 secrets:
   my_secret:
@@ -24,19 +31,3 @@ secrets:
 /> docker exec -it 83e239e2fbba psql -U postgres
 
 
-======================================================================
-
-
-version: "3"
-services:
-  postgress:
-   image: postgres:11
-   environment:
-     POSTGRES_PASSWORD: postgres
-   healthcheck:
-     test: ["CMD-SHELL", "pg_isready -U postgres"]
-     interval: 10s
-     timeout: 5s
-     retries: 5
-   ports:
-   - 5432:5432
