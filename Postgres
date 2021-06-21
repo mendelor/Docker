@@ -28,6 +28,9 @@ secrets:
     file: ./my_file_secret.txt
 
 
-/> docker exec -it 83e239e2fbba psql -U postgres
+/> docker exec -it 83e psql -U postgres
+
+/> docker exec --user postgres -it postgres bash
+/> psql --host=172.19.0.2 --port=5432 --dbname=postgres --username=postgres
 
 
