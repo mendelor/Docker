@@ -1,0 +1,15 @@
+1. Create dockerfile
+FROM httpd:2.4
+COPY copy .
+RUN ls -ltr
+
+2. Create directory copy
+   touch aaa.jpg
+
+
+3. Create .dockerignore file:  vim .dockerignore
+*/*.jpg
+**/*.jpg
+
+4. Build the image
+docker build -t c --no-cache .
