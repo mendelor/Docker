@@ -2,3 +2,4 @@ For upgrading/installing latest version:
 https://www.simplilearn.com/tutorials/docker-tutorial/how-to-install-docker-on-ubuntu
 
 /> docker rm $(docker ps -aq)         - Delete all containers
+/> docker exec --interactive --tty <container_name> whoami                                         Check user inside a container
