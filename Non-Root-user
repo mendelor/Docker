@@ -1,0 +1,224 @@
+<Check user inside a container>
+
+/> docker exec --interactive --tty <container_name> whoami
+https://rmoff.net/2021/01/13/running-as-root-on-docker-images-that-dont-use-root/
+
+/> docker image inspect $(docker image ls -q) -f "{{ .RepoTags }}: {{ .ContainerConfig.User }} {{ .Config.User }}"
+https://stackoverflow.com/questions/54675074/how-to-identify-if-any-applications-inside-docker-container-as-running-as-root
+** if no user has defined you're the root
+
+
+
+php
+
+
+FROM php:7.2-apache
+COPY src/ /var/www/html/
+#command to install setcap tool
+RUN apt-get update -y
+RUN apt-get  install -y libcap2-bin
+#command to set user non root
+RUN setcap 'cap_net_bind_service=+ep' /usr/sbin/apache2
+RUN getcap /usr/sbin/apache2
+USER www-data
+
+
+=================================
+
+httpd                (aaa in ECS  working as a nonRoot user)
+
+FROM httpd:2.4-alpine
+#Custom changes
+RUN apk update && apk upgrade
+RUN apk -q add curl vim libcap
+
+#Change access righs to conf, logs, bin from root to www-data
+RUN chown -hR www-data:www-data /usr/local/apache2/
+
+#setcap to bind to privileged ports as non-root
+RUN setcap 'cap_net_bind_service=+ep' /usr/local/apache2/bin/httpd
+RUN getcap /usr/local/apache2/bin/httpd
+
+HEALTHCHECK --interval=60s --timeout=30s CMD nc -zv localhost 80 || exit 1
+#Run as a www-data
+USER www-data
+==================================
+
+ nginx
+
+
+
+FROM nginx:stable  //  FROM nginx
+
+#COPY ./nginx.conf /etc/nginx/nginx.conf
+#COPY ./site.conf /etc/nginx/conf.d/default.conf
+
+RUN touch /var/run/nginx.pid && \
+  chown -R www-data:www-data /var/run/nginx.pid && \
+  chown -R www-data:www-data /var/cache/nginx
+
+RUN apt-get update -y
+RUN apt-get  install -y libcap2-bin
+
+#setcap to bind to privileged ports as non-root
+RUN setcap 'cap_net_bind_service=+ep' /usr/sbin/nginx
+RUN getcap /usr/sbin/nginx
+
+
+USER www-data
+
+
+// docker run -d -p 80:8080 mynginx
+
+=============================
+mysql, java, ,          (I run mysql:8.0, MYSQL_USER_PASSWORD, USER -mysql - works in ECS)
+
+
+
+
+FROM oraclelinux:7-slim
+
+ARG MYSQL_SERVER_PACKAGE=mysql-community-server-minimal-5.7.30
+ARG MYSQL_SHELL_PACKAGE=mysql-shell-8.0.20
+
+# Install server
+RUN yum install -y https://repo.mysql.com/mysql-community-minimal-release-el7.rpm \
+      https://repo.mysql.com/mysql-community-release-el7.rpm \
+  && yum-config-manager --enable mysql57-server-minimal \
+  && yum install -y \
+      $MYSQL_SERVER_PACKAGE \
+      $MYSQL_SHELL_PACKAGE \
+      libpwquality \
+  && yum clean all \
+  && mkdir /docker-entrypoint-initdb.d
+
+VOLUME /var/lib/mysql
+
+#COPY docker-entrypoint.sh /entrypoint.sh
+COPY healthcheck.sh /healthcheck.sh
+ENTRYPOINT ["/entrypoint.sh"]
+HEALTHCHECK CMD /healthcheck.sh
+EXPOSE 3306 33060
+CMD ["mysqld"]
+=================================================
+
+< Mysql >    It works!
+
+I created dockerfile:
+
+FROM mysql:5.7
+COPY ./init.sql /docker-entrypoint-initdb.d
+USER mysql
+
+/> docker build -t aaa .
+/> docker run -d --name ms -e MYSQL_ROOT_PASSWORD=my-secret-pw aaa
+================================================================================
+< Ubuntu >    It works!
+
+FROM ubuntu
+RUN groupadd --non-unique --gid 23456 awesomegroup
+RUN useradd --non-unique --system --uid 12345 --gid 23456 chanseok
+USER chanseok
+
+docker build -t ubun .
+docker run -itd ubun bash      <stays in the running mode>
+docker run -it --rm ubunt bash
+
+
+
+
+
+
+ps aux | grep mysql
+
+
+
+
+
+
+
+===============================Fix the path/location
+FROM openjdk:8-jre-alpine
+
+RUN apk update && apk add bash
+
+WORKDIR /usr/src/myapp
+
+COPY my-app-1.0-SNAPSHOT.jar /usr/src/myapp
+
+RUN setcap 'cap_net_bind_service=+ep' /usr/sbin/java
+RUN getcap /usr/sbin/java
+
+EXPOSE 8080
+
+#CMD ["java", "-jar", "my-app-1.0-SNAPSHOT.jar"]
+==============================================
+
+
+
+
+
+
+
+you need to add below two lines
+RUN setcap 'cap_net_bind_service=+ep' /usr/sbin/apache2
+RUN getcap /usr/sbin/apache2
+replace the httpd binary location with java
+
+
+FROM openjdk:8-jre-alpine
+
+RUN apk update && apk add bash
+
+WORKDIR /usr/src/myapp
+
+COPY book-service-0.1.0.jar /usr/src/myapp
+
+RUN setcap 'cap_net_bind_service=+ep' /usr/sbin/java
+RUN getcap /usr/sbin/java
+
+EXPOSE 8080
+
+#CMD ["java", "-jar", "book-service-0.1.0.jar"]
+
+
+
+
+
+
+
+
+
+
+
+FROM mysql:5.7
+
+RUN apt-get update & apt-get upgrade -y
+
+ENV MYSQL_USER=user1 \
+    MYSQL_PASSWORD=pass5 \
+    MYSQL_DATABASE=db \
+    MYSQL_ROOT_PASSWORD=XXX
+
+RUN groupadd -r mysql && useradd -r -g mysql mysql
+
+
+
+
+
+
+
+
+FROM tomcat:8.0-alpine
+
+LABEL maintainer="deepak@softwadaddasd.com"
+
+ADD sample.war /usr/local/tomcat/webapps/
+
+RUN addgroup tomcatusers && adduser -D tomcat && adduser tomcat tomcatusers
+RUN chown -R tomcat:tomcatusers .
+USER tomcat
+
+EXPOSE 8080
+
+CMD ["catalina.sh", "run"]
