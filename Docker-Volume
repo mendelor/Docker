@@ -1,0 +1,150 @@
+http://www.ethernetresearch.com/docker/docker-tutorial-persistent-storage-volumes-and-stateful-containers/
+
+docker volume plugin: 
+docker plugin install purestorage/docker-plugin:v3.10 --alias pure --grant-all-permissions
+
+
+docker volume create mysql-data
+docker volume inspect mysql-data
+docker run --name ganesh-mysql -v mysql-data:/var/lib/mysql -e MYSQL_ROOT_PASSWORD=mypasswd -d mysql:latest <!-- pull mysql image -->
+docker exec -it <containerName> /bin/bash
+ls /var/lib/mysql   <!-- run inside the container --> exit
+--------------------------------------------------------
+docker inspect <container name>
+dockerfiles# mysql -h 172.17.0.2 -P 3306 -u root -p           <!-- mypasswd -->
+--------------------------------------------------------
+sudo ls /var/lib/docker/volumes/mysql-data/_data
+docker volume prune <deletes all volumes>
+
+************ mysql -u root -p *********** connect sql inside the container!!!!!!!!!
+
+docker run --name ganesh-mysql -v mysql-data:/var/lib/mysql -e MYSQL_ROOT_PASSWORD=mypasswd -d mysql:latest
+
+
+
+                     --opt equl to option
+docker volume create --opt type=aufs --opt o=size=100G,uid=501 --opt device=/var/lib/docker/aufs myvolume
+docker volume create --opt type=overlay2 --opt o=size=100G,uid=501 --opt device=test myvolume
+
+
+
+
+give a name to volume:
+docker container run -d --name mysql -e MYSQL_ALLOW_EMPTY_PASSWORD=True -v mysql-db:/var/lib/mysql mysql
+
+run container from with that volume: (not working)
+docker run -d --name mysql -v mysql-db:/var/lib/mysql -e MYSQL_ROOT_PASSWORD=password -p 3308:3306 mysql
+
+http://www.ethernetresearch.com/docker/docker-tutorial-persistent-storage-volumes-and-stateful-containers/
+https://stackoverflow.com/questions/57910686/is-it-possible-to-run-new-mysql-docker-container-and-use-an-existing-volume-as-t
+-----------------------------------------------------------------------------------------------------
+Question I asked about dockervolume:
+******** https://stackoverflow.com/questions/57602439/is-it-possible-to-install-mysqli-extensions-via-docker-run-command
+docker run -d -it -p 80:80 --name=www1 --mount source=myvol1,destination=/var/www/html php:7.2.2-apache
+docker exec -it www1 docker-php-ext-install mysqli
+docker stop www1
+docker start www1
+-----------------------------------------------------------------------------------
+
+Docker Containers Tutorial – Persistent Storage Volumes and Stateful Containers:
+http://www.ethernetresearch.com/docker/docker-tutorial-persistent-storage-volumes-and-stateful-containers/
+
+1. docker volume create myvol
+** create a volume
+
+2. docker container create --name dummy -v myvol:/root hello-world
+** create a dummy container
+
+3. docker cp index.html  dummy:/root/index.html
+** copy the file to /var/lib/docker/volumes/myvol/_data
+
+
+docker volume inspect -f '{{ .Mountpoint }}' myvol ((output))-> /var/lib/docker/volumes/myvol/_data
+4. docker inspect -f '{{ .Mounts }}' <containerid>
+** find the volume path to list what's in it **
+
+5. docker run -d -it -p 80:80 --name=www1 --mount source=myvol,destination=/usr/local/apache2/htdocs httpd:2.4
+
+docker container run -dit --name voltainer  --mount source=bizvol,target=/vol  alpine  (from nick book Oreilly)
+The command uses the --mount flag to mount a volume called “bizvol” into the container at either /vol or c:\vol. The command completes successfully despite the fact there is no volume on the system called bizvol. This raises an interesting point:
+<SWARM> docker service create --name hellcat --mount source=bizvol,target=/vol alpine sleep 1d
+
+**(https://linuxhint.com/docker_volume_share_data/) - copy from here and run number 5 (in myvol i copy index.php)
+
+docker run -d -it -p 80:80 --name=www --mount source=myvol,destination=/var/www/html httpd:2.4
+docker container rm -f <container name- www>
+docker run -d -it -p 80:80 --name=www1 --mount source=myvol,destination=/usr/local/apache2/htdocs httpd:2.4
+docker run -d -it -p 8080:80 --name=mmmm --mount source=myvol,destination=/usr/local/apache2/htdocs httpd:2.4
+--------- Sharing successfully the file between 2 containers!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+
+docker cp aws-ecs.png  dummy:/root/aws-ecs.png
+
+
+copy files from volume to container
+
+docker run -d -it -p 80:80 --name=www --mount source=data1,destination=/usr/local/apache2/htdocs httpd:2.4
+
+6. docker run -d --name mysql -e MYSQL_ALLOW_EMPTY_PASSWORD=True -v mysql-db:/var/lib/mysql mysql
+<!-- -v mysql-db:   when you run docker volume ls you'll see volume named mysql-db: instead of number
+51dc1ae9114e8471b65a08b425e62bf620f6743abcc1d0a6754341b15ee9-->
+docker volume inspect mysql-db to see details about volume
+
+root@ip-172-31-5-xxx:/var/lib/docker/volumes# ls -lhrt
+
+--------------------------------------------------------
+delete unused volume:
+//docker volume ls -qf dangling=true
+
+delete all volumes:
+//docker volume rm $(docker volume ls -qf dangling=true)
+
+// docker volume rm <volName>
+--------------------------------------------------------
+docker run -d --name mysql -v mysql-db -e MYSQL_ROOT_PASSWORD=password -p 3307:3306 mysql
+
+
+
+
+check this one
+https://www.digitalocean.com/community/tutorials/how-to-share-data-between-docker-containers
+
+https://linuxhint.com/docker_volume_share_data/
+
+https://github.com/moby/moby/issues/25245
+
+
+
+
+https://bobcares.com/blog/move-docker-container-to-another-host/
+
+
+
+docker run -p 80:80 --name=ccc --mount source=myvol1,destination=/var/www/html httpd:2.4
+
+---------
+https://blog.container-solutions.com/understanding-volumes-docker   -simple example
+---------
+https://tecadmin.net/tutorial/docker/docker-data-volumes/
+
+
+
+--------------------- attach volume + network
+---------------------
+version: '3'
+services:
+  db:
+    image: "mysql:5.7"
+    container_name: 'mysqlcompose1'
+    volumes:
+      - data-mysql:/var/lib/mysql
+    networks:
+      - simple-network
+    ports:
+      - '3306:3306'
+    environment:
+      - MYSQL_ROOT_PASSWORD=${PASS}
+volumes:
+  data-mysql:
+    driver: local
+networks:
+  simple-network:
