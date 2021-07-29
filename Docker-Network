@@ -1,0 +1,129 @@
+---------BETTER TO CREATE YOUR OWN BRIDGE NETWORK----------
+It's better to create new BRIDGE network and use dns because ip's always changged and container name does not work with default bridge!!!
+// docker network create --driver=bridge --subnet=192.168.0.0/16 network1
+// docker container run -dt --name container3 --network network1 centos bash
+// docker container run -dt --name container4 --network network1 centos bash
+// docker container inspect container3 | grep -i ipaddr
+// docker container inspect container4 | grep -i ipaddr
+// docker container exec -it container3 /bin/bash
+// ping container4    works!     -WITH DEFAULT BRIDGE WON'T WORK!!!!
+//ping <ip container4>   works!
+----------------------- http://100daysofdevops.com/21-days-of-docker-day-9-docker-networking-part-1/
+
+FROM DOCKER WORKSHOP BOOK!
+< Weave net docker network driver within docker swarm cluster - most common and flexible third-party docker network driver available.
+docker olugin install store/weaveworks/net-plugin:2.5.2
+
+>
+\\ docker network ls
+\\ docker network inspect <network name>
+\\docker network disconnect <network name> 37322ef925aa
+\\docker network connect manny 37322ef925aa
+/> brctl show
+/> docker network inspect localne --format '{{json .Containers}}'
+/> docker network create -d macvlan  --subnet=10.0.0.0/24 --ip-range=10.0.0.0/25  --gateway=10.0.0.1 -o parent=eth0.100 macvlan100
+/> docker container run -d --name mactainer1  --network macvlan100   alpine sleep 1d
+/> docker container run -d --name mactainer1234567 --log-driver=journald  --network macvlan100   alpine sleep 1d
+/> journalctl CONTAINER_NAME=mactainer1234567
+
+https://github.com/microsoft/docker/blob/master/docs/admin/logging/journald.md
+https://github.com/piwi3910/techtalk/tree/master/Docker_series/08
+
+
+If you’re unsure about terms such as control plane and * data plane*, control plane traffic is cluster management traffic, whereas data plane traffic is application traffic. By default, Docker overlay networks encrypt cluster management traffic but not application traffic. You must explicitly enable encryption of application traffic.
+For overlay networks, the control plane is encrypted by default. Just add the -o encrypted flag to encrypt the data plane
+
+
+
+\\ ip addr list   <inside the container>
+
+docker network create --driver=bridge --subnet=192.168.0.0/16 mysubnet
+
+---------------------- From Github how to attached NETWORK to your container----------------------------
+docker run httpd:2.4 echo "hi from the container; will print this message and I will be terminated"
+docker build -t aaa .
+docker run --net=host aaa
+--------------------------------------------------------------------------------
+
+When you create custom bridge network you can access from one container to another by ip and by container names, however
+if you're using the default birdge network, it only allow you to ping via ip  (ping from inside a container to different container)
+
+
+IN HOST network you will see all the interface traffic of the all network (less common to use host)
+
+None network is for cases your container has hacked!
+
+
+Dockerfile:
+FROM httpd:2.4
+
+docker build t- aaa . ; docker build t- bbb . ;
+docker run  --net=mynet aaa
+docker run  --net=mynet bbb
+
+docker container start <container aaa and bbb>
+
+* To see which containers are running on mynet network run the following command:
+docker inspect mynet
+
+
+
+
+
+docker network create -d overlay my-overlay
+
+<!-- in docker-compose -->
+networks:
+  my-network:
+    driver: overlay
+     <!-- in docker-compose -->
+
+docker run -p 80:80 --network=<networkname> phtml
+docker run my_container --net=my_network
+
+
+docker: Error response from daemon: OCI runtime create failed: container_linux.go:345:
+starting container process caused "exec: \"--network\": executable file not found in $PATH": unknown.
+
+
+
+     https://docs.docker.com/network/macvlan/
+
+
+
+============================================================= Using existing network (bridge) inside docker compose!!!
+
+
+/> docker network create --driver=bridge --subnet=192.168.0.0/16 network1
+
+version: "3.1"
+services:
+ postgress:
+  image: postgres:12
+  environment:
+    POSTGRES_PASSWORD_FILE: /run/secrets/my_secret
+    POSTGRES_USER: postgres
+  secrets:
+    - my_secret
+  healthcheck:
+    test: ["CMD-SHELL", "pg_isready -U postgres"]
+    interval: 10s
+    timeout: 5s
+    retries: 5
+  ports:
+    - 5432:5432
+  container_name: postgres
+  volumes:
+     - pgvol:/var/lib/postgresql/data
+
+networks:
+ default:
+   external:
+     name: network1
+
+volumes:
+ pgvol:
+
+secrets:
+ my_secret:
+   file: ./my_file_secret.txt
