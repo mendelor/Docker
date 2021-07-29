@@ -1,0 +1,186 @@
+CAdvisor
+https://github.com/google/cadvisor
+
+sudo docker run \
+  --volume=/:/rootfs:ro \
+  --volume=/var/run:/var/run:ro \
+  --volume=/sys:/sys:ro \
+  --volume=/var/lib/docker/:/var/lib/docker:ro \
+  --volume=/dev/disk/:/dev/disk:ro \
+  --publish=8080:8080 \
+  --detach=true \
+  --name=cadvisor \
+  google/cadvisor:latest
+
+
+
+  https://www.udemy.com/course/aws-lambda-serverless-architecture/
+
+
+
+
+  sudo docker run \
+    --volume=/:/rootfs:ro \
+    --volume=/var/run:/var/run:ro \
+    --volume=/sys:/sys:ro \
+    --volume=/var/lib/docker/:/var/lib/docker:ro \
+    --volume=/dev/disk/:/dev/disk:ro \
+    --publish=8080:8080 \
+    --detach=true \
+    --name=cadvisor \
+    --privileged \
+    --device=/dev/kmsg \
+    gcr.io/cadvisor/cadvisor:latest
+
+
+
+https://logz.io/blog/prometheus-tutorial-docker-monitoring/#systemdocker
+
+
+
+
+version: "3.7"
+services:
+  db:
+    image: 'mysql:5.7'
+    container_name: mysql
+    environment:
+      MYSQL_ROOT_PASSWORD_FILE: /run/secrets/my_secret
+    secrets:
+      - my_secret
+    volumes:
+      - data-mysql:/var/lib/mysql
+    ports:
+      - '3306:3306'
+    healthcheck:
+      test: ["CMD-SHELL", 'mysqladmin ping']
+      interval: 10s
+      timeout: 45s
+      retries: 10
+
+secrets:
+  my_secret:
+    file: ./super_duper_secret.txt
+volumes:
+ data-mysql:
+   driver: local
+
+
+
+
+
+
+--------------------------------------------------------------------------------
+Docker logs not working at the moment
+================================================================================
+Docker Logs:
+
+
+https://docs.fluentd.org/installation/install-by-deb
+For Ubuntu Bionic:
+/> curl -L https://toolbelt.treasuredata.com/sh/install-ubuntu-bionic-td-agent4.sh | sh
+
+$ sudo systemctl start td-agent.service
+$ sudo systemctl status td-agent.service
+
+
+
+
+
+
+
+
+
+
+
+docker run \
+      --log-driver syslog --log-opt syslog-address=udp://172.31.26.xxx:1111 \
+      alpine echo hello world
+
+172.31.26.xxx
+
+{
+  "log-driver": "syslog",
+  "log-opts": {
+    "syslog-address": "tcp://172.31.26.xxx:1111"
+  }
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+https://github.com/solarwinds/docker-plugin-papertrail
+
+/> docker plugin install solarwinds/papertrail-plugin
+
+Plugin "solarwinds/papertrail-plugin" is requesting the following privileges:
+ - network: [host]
+Do you grant the above permissions? [y/N] y    (type y, yes won't work)
+
+
+docker run --rm --log-driver solarwinds/papertrail-plugin --log-opt papertrail-url=127.0.0.1:55555 \
+    --log-opt papertrail-token=adbdyxendkkxk ubuntu bash -c 'while true; do date +%s%N | sha256sum | base64 | head -c 32 ; echo " - Hello world"; sleep 10; done'
+
+
+7wuTwQYwErgYM31py33 -  Token
+
+
+https://documentation.solarwinds.com/en/Success_Center/papertrail/Content/kb/configuration/configuring-centralized-logging-from-docker.htm?cshid=pt-configuration-configuring-centralized-logging-from-docker
+
+{
+  "log-driver": "solarwinds/papertrail-plugin",
+  "log-opts": {
+    "papertrail-url": "logs4.papertrailapp.com:40211",
+    "papertrail-token": "7wuTwQYwErgYM31py33",
+    "papertrail-log-retention": "4h",
+    "papertrail-max-diskusage": "10"
+  }
+}
+
+{
+  "log-driver": "solarwinds/papertrail-plugin",
+  "log-opts": {
+    "papertrail-url": "18.224.147.xxx:55555",
+    "papertrail-token": "7wuTwQYwErgYM31py33",
+    "papertrail-log-retention": "4h",
+    "papertrail-max-diskusage": "10"
+  }
+}
+
+
+docker run --restart=always -d \
+    -v=/var/run/docker.sock:/var/run/docker.sock gliderlabs/logspout  \
+    syslog+tls://logs4.papertrailapp.com:40211
+
+
+docker run --restart=always -d \
+    -v=/var/run/docker.sock:/var/run/docker.sock  \
+    -e ContainerName=`mysql80` gliderlabs/logspout \
+    syslog+tls://logs4.papertrailapp.com:40211
+
+docker run --name="logspout" --volume=/var/run/docker.sock:/var/run/docker.sock gliderlabs/logspout syslog+tls://logs4.papertrailapp.com:40211
+
+
+
+docker run --rm --log-driver solarwinds/papertrail-plugin --log-opt papertrail-url=logs4.papertrailapp.com:40211 \
+    --log-opt papertrail-token=7wuTwQYwErgYM31py33 ubuntu bash -c 'while true; do date +%s%N | sha256sum | base64 | head -c 32 ; echo " - Hello world"; sleep 10; done'
+
+
+
+docker plugin rm -f solarwinds/papertrail-plugin
+
+
+{{.mysql80}}
+
+ContainerName
+
+http://18.224.147.xxx:9090/api/v1/label/__name__/values
