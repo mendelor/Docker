@@ -1,0 +1,120 @@
+good source:
+https://github.com/56kcloud/traefik-training
+https://github.com/56kcloud/traefik-training
+https://www.youtube.com/watch?v=cZSTNu-LLmQ
+
+
+https://www.youtube.com/watch?v=Tvimwm9665U
+https://letsencrypt.org/docs/certificates-for-localhost/
+
+https://stackoverflow.com/questions/60729368/how-to-mae-traefik-as-reverse-proxy-with-docker-compose
+https://medium.com/better-programming/traefik-2-1-as-a-reverse-proxy-c9e274da0a32
+================================================================================
+
+
+** Docker Hub instractions:
+
+/> vim traefik.yml
+
+# Docker configuration backend
+providers:
+  docker:
+    defaultRule: "Host(`{{ trimPrefix `/` .Name }}.docker.localhost`)"
+
+# API and dashboard configuration
+api:
+  insecure: true
+
+/> docker run -d -p 8080:8080 -p 80:80 \
+-v $PWD/traefik.yml:/etc/traefik/traefik.yml \
+-v /var/run/docker.sock:/var/run/docker.sock \
+traefik:v2.0
+
+/> docker run -d --name test containous/whoami
+
+/> curl test.docker.localhost
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+version: "3.3"
+
+services:
+
+  traefik:
+    image: "traefik:v2.3"
+    container_name: "traefik"
+    command:
+      #- "--log.level=DEBUG"
+      - "--api.insecure=true"
+      - "--providers.docker=true"
+      - "--providers.docker.exposedbydefault=false"
+      - "--entrypoints.web.address=:80"
+      - "--accesslog=true"
+      - "--accesslog.filepath=/logs/access.log"
+      - "--accesslog.bufferingsize=100"
+      - "--accesslog.format=json"
+    ports:
+      - "80:80"
+      - "8080:8080"
+    volumes:
+      - "/var/run/docker.sock:/var/run/docker.sock:ro"
+
+  whoami:
+    image: "traefik/whoami"
+    container_name: "simple-service"
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.whoami.rule=Host(`18.224.147.172`)"
+      - "traefik.http.routers.whoami.entrypoints=web"
+
+** Then go to 18.224.147.172 and see the content of:  (https://doc.traefik.io/traefik/user-guides/docker-compose/basic-example/)
+Hostname: 099ed4f5eacf
+IP: 127.0.0.1
+IP: 192.168.80.2
+RemoteAddr: 192.168.80.3:33872
+GET / HTTP/1.1
+Host: 18.224.147.172
+User-Agent: Mozilla/5.0 (Windows NT 6.1; Win64; x64; rv:72.0) Gecko/20100101 Firefox/72.0
+Accept: text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8
+Accept-Encoding: gzip, deflate
+Accept-Language: en-US,en;q=0.5
+Dnt: 1
+Upgrade-Insecure-Requests: 1
+X-Forwarded-For: 101.98.165.143
+X-Forwarded-Host: 18.224.147.172
+X-Forwarded-Port: 80
+X-Forwarded-Proto: http
+X-Forwarded-Server: 414a780218ea
+X-Real-Ip: 101.98.165.143
+
+AND go to:  http://18.224.147.172:8080/api/rawdata   -OR-  curl -s 127.0.0.1:8080/api/rawdata | jq .
+
+
+
+
+
+/> openssl req -subj '/CN=18.224.147.172' -x509 -newkey rsa:4096 -nodes -keyout key.pem -out cert.pem -days 365
+< removing or commenting RANDFILE = $ENV::HOME/.rnd line in /etc/ssl/openssl.cnf
+
+
+
+openssl req -x509 -out localhost.crt -keyout localhost.key \
+  -newkey rsa:2048 -nodes -sha256 \
+  -subj '/CN=localhost' -extensions EXT -config <( \
+   printf "[dn]\nCN=localhost\n[req]\ndistinguished_name = dn\n[EXT]\nsubjectAltName=DNS:localhost\nkeyUsage=digitalSignature\nextendedKeyUsage=serverAuth")
+
