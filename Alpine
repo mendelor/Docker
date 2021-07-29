@@ -1,0 +1,1 @@
+/> docker container run -dit --name apparmor1 --network network1 alpine sh
