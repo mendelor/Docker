@@ -1,0 +1,82 @@
+DOCKER_BUILDKIT + Multi Stages:
+https://www.youtube.com/watch?v=JofsaZ3H1qM
+https://docs.docker.com/develop/develop-images/build_enhancements/
+
+https://pythonspeed.com/articles/docker-buildkit/   -    11/1/2021
+https://hub.docker.com/r/docker/dockerfile/
+
+/> time DOCKER_BUILDKIT=0  docker build -t ubu -f dockerubuntu.yml . --no-cache
+/> time DOCKER_BUILDKIT=1  docker build -t ubu -f dockerubuntu.yml . --no-cache
+
+========================Dockerfile====================================
+FROM httpd:2.4
+
+1. DOCKER_BUILDKIT=0
+   time docker build -t aaa .
+
+2. time DOCKER_BUILDKIT=1 docker build -t aaa  --file dockerfile .
+
+
+https://pythonspeed.com/articles/docker-buildkit/           -   28/04/2021
+$ export DOCKER_BUILDKIT=1
+$ export COMPOSE_DOCKER_CLI_BUILD=1
+/> DOCKER_BUILDKIT=1 docker build -t aaa --progress=plain --file dockerfile  .
+
+
+
+*** File with examples from youtube - Docker-BuildKit-MultiStages.jpg
+========================================================================
+========================================================================
+========================================================================
+========================Docker-compose==================================
+https://www.docker.com/blog/faster-builds-in-compose-thanks-to-buildkit-support/
+
+vim docker-compose.yml:
+version: "3.7"
+services:
+  dummyservice:
+    image: dummyimage:latest
+    build: .
+
+vim dockerfile:
+FROM scratch
+COPY myfile.txt .
+
+vim myfile.txt:
+asdasdasdasdsdadafdsdf
+
+
+// time docker-compose build                            -> real    0m0.719s
+// time COMPOSE_DOCKER_CLI_BUILD=1 docker-compose build -> real    0m0.593s
+========================================================================
+
+Multi-stage  - creates bigger image 372mb / 579mb
+===========
+
+FROM mysql:5.7.22
+COPY ./setup.sql /docker-entrypoint-initdb.d
+ENV MYSQL_ROOT_PASSWORD=1234
+
+
+
+FROM mysql:5.7.22 as builder
+
+# That file does the DB initialization but also runs mysql daemon, by removing the last line it will only init
+RUN ["sed", "-i", "s/exec \"$@\"/echo \"not running $@\"/", "/usr/local/bin/docker-entrypoint.sh"]
+
+# needed for intialization
+ENV MYSQL_ROOT_PASSWORD=1234
+
+COPY setup.sql /docker-entrypoint-initdb.d/
+
+# Need to change the datadir to something else that /var/lib/mysql because the parent docker file defines it as a volume.
+# https://docs.docker.com/engine/reference/builder/#volume :
+#       Changing the volume from within the Dockerfile: If any build steps change the data within the volume after
+#       it has been declared, those changes will be discarded.
+RUN ["/usr/local/bin/docker-entrypoint.sh", "mysqld", "--datadir", "/initialized-db"]
+
+FROM mysql:5.7.22
+
+COPY --from=builder /initialized-db /var/lib/mysql
+
+https://qastack.id/server/796762/creating-a-docker-mysql-container-with-a-prepared-database-scheme
