@@ -1,0 +1,135 @@
+Configure Self-Signed SSL For Nginx Docker From A Scratch:
+
+
+https://codingwithmanny.medium.com/configure-self-signed-ssl-for-nginx-docker-from-a-scratch-7c2bcd5478c6
+
+
+
+/> docker run -it -p 80:80 -p 443:443 --name nginx-alpine-ssl alpine /bin/sh;
+/> apk add nginx;
+/> mkdir /run/nginx/;
+/> nginx;
+/> apk add curl;
+/> curl localhost;
+/> apk add nano;
+/> nano /etc/nginx/conf.d/default.conf
+/> vim /etc/nginx/conf.d/default.conf
+
+server {
+        listen 80 default_server;
+        listen [::]:80 default_server;
+        # New root location
+        location / {
+                root /var/www/localhost/htdocs;
+                # return 404;
+        }
+        # You may need this to prevent return 404 recursion.
+        location = /404.html {
+                internal;
+        }
+}
+
+
+/> nginx -s reload;
+/> echo "<h1>Hello world!</h1>" > /var/www/localhost/htdocs/index.html;
+/> curl localhost;
+/> apk add openssl;            (still runing inside the container )
+/> openssl req -x509 -nodes -days 365 -subj "/C=CA/ST=QC/O=Company, Inc./CN=mydomain.com" -addext "subjectAltName=DNS:mydomain.com" -newkey rsa:2048 -keyout /etc/ssl/private/nginx-selfsigned.key -out /etc/ssl/certs/nginx-selfsigned.crt;
+/> vim /etc/nginx/conf.d/default.conf
+
+server {
+        listen 80 default_server;
+        listen [::]:80 default_server;
+        listen 443 ssl http2 default_server;
+        listen [::]:443 ssl http2 default_server;
+        ssl_certificate /etc/ssl/certs/nginx-selfsigned.crt;
+        ssl_certificate_key /etc/ssl/private/nginx-selfsigned.key;
+        # New root location
+        location / {
+                root /var/www/localhost/htdocs;
+                # return 404;
+        }
+        # You may need this to prevent return 404 recursion.
+        location = /404.html {
+                internal;
+        }
+}
+
+
+/> nginx -t;
+/> nginx -s reload;
+/> curl https://localhost;
+/> curl https://localhost --insecure;
+/> docker cp nginx-alpine-ssl:/etc/ssl/certs/nginx-selfsigned.crt ~/Desktop;
+/> mkdir -p ~/Documents/nginx-alpine-ssl;
+/> mkdir -p ~/Documents/nginx-alpine-ssl/config;
+
+# certificate
+/> docker cp nginx-alpine-ssl:/etc/ssl/certs/nginx-selfsigned.crt ~/Documents/nginx-alpine-ssl/config;
+
+# private key
+/> docker cp nginx-alpine-ssl:/etc/ssl/private/nginx-selfsigned.key ~/Documents/nginx-alpine-ssl/config;
+
+# nginx configuration file
+/> docker cp nginx-alpine-ssl:/etc/nginx/conf.d/default.conf ~/Documents/nginx-alpine-ssl/config;
+
+/> touch ~/Documents/nginx-alpine-ssl/Dockerfile;
+/> vim Dockerfile
+
+# BASE
+FROM alpine
+# RUN
+RUN apk add nginx; \
+    mkdir /run/nginx/; \
+    echo "<h1>Hello world!</h1>" > /var/www/localhost/htdocs/index.html;
+# CONFIGUTATIONS
+# nginx configuration
+ADD $PWD/config/default.conf /etc/nginx/conf.d/default.conf
+# keys and certs
+ADD $PWD/config/*.key /etc/ssl/private/
+ADD $PWD/config/*.crt /etc/ssl/certs/
+WORKDIR /var/www/localhost/htdocs
+# ENTRYPOINT
+COPY $PWD/config/entrypoint.sh /usr/local/bin
+RUN chmod +x /usr/local/bin/entrypoint.sh
+ENTRYPOINT ["/bin/sh", "/usr/local/bin/entrypoint.sh"]
+# EXPOSE PORTS
+EXPOSE 80
+EXPOSE 443
+# RUN COMMAND
+CMD ["/bin/sh", "-c", "nginx -g 'daemon off;'; nginx -s reload;"]
+
+/> touch ~/Documents/nginx-alpine-ssl/config/entrypoint.sh
+/> vim /config/entrypoint.sh
+
+# Main shell script that is run at the time that the Docker image is run
+# Go to default.conf directory
+cd /etc/nginx/conf.d;
+# ENV VARS
+# A list of environment variables that are passed to the container and their defaults
+# CRT - double check that the file exists
+export CRT="${CRT:=nginx-selfsigned.crt}";
+if [ -f "/etc/ssl/certs/$CRT" ]
+then
+    # set crt file in the default.conf file
+    sed -i "/ssl_certificate \//c\\\tssl_certificate \/etc\/ssl\/certs\/$CRT;" default.conf;
+fi
+# KEY - double check that the file exists
+export KEY="${KEY:=nginx-selfsigned.key}";
+if [ -f "/etc/ssl/private/$KEY" ]
+then
+    # set key file in the default.conf file
+    sed -i "/ssl_certificate_key \//c\\\tssl_certificate_key \/etc\/ssl\/private\/$KEY;" default.conf;
+fi
+# Needed to make sure nginx is running after the commands are run
+nginx -g 'daemon off;'; nginx -s reload;
+
+
+/> docker build . -t nginxssltest;
+/> docker run -it -d -p 80:80 -p 443:443 --name test nginxssltest;
+/> curl localhost;
+/> curl https://localhost --insecure;
+
+
+Try with Bret fisher's compose
+https://github.com/BretFisher/compose-dev-tls/blob/main/docker-compose.yaml
