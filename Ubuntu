@@ -1,0 +1,20 @@
+FROM ubuntu
+RUN groupadd --non-unique --gid 23456 awesomegroup
+RUN useradd --non-unique --system --uid 12345 --gid 23456 chanseok
+USER chanseok
+
+
+docker run -itd ubuntu bash
+docker run -it --network dockerfiles_default --rm ubuntu bash
+OR
+/> docker run -t -i -d ubun
+/> docker stats --format "table {{.Name}}\t{{.Container}}\t{{.CPUPerc}}"
+
+apt-get update
+apt-get install -y iputils-ping
+
+
+
+
+** Also nice example:   (replace the image to ubuntu:20.04
+https://github.com/codebarber/ansible-packer-terraform/blob/master/Dockerfile
