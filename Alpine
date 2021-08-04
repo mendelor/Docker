@@ -1,1 +1,5 @@
 /> docker container run -dit --name apparmor1 --network network1 alpine sh
+
+
+Alpine example with packer: 
+https://github.com/joaoasrosa/packer-goss-awscli-docker/blob/master/Dockerfile
