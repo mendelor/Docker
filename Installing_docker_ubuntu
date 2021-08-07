@@ -1,0 +1,8 @@
+/> sudo apt-get remove docker docker-engine docker.io  
+/> sudo apt-get update
+/> sudo apt install docker.io
+/> sudo snap install docker
+/> docker --version
+
+
+https://www.simplilearn.com/tutorials/docker-tutorial/how-to-install-docker-on-ubuntu
