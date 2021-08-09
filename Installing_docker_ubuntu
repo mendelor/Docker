@@ -1,8 +1,16 @@
+----------------Docker---------------------
 /> sudo apt-get remove docker docker-engine docker.io  
 /> sudo apt-get update
 /> sudo apt install -y docker.io
 /> sudo snap install docker
 /> docker --version
 
-
 https://www.simplilearn.com/tutorials/docker-tutorial/how-to-install-docker-on-ubuntu
+
+
+----------------Docker-compose---------------------
+/> sudo curl -L "https://github.com/docker/compose/releases/download/1.29.2/docker-compose-$(uname -s)-$(uname -m)" -o /usr/local/bin/docker-compose
+/> sudo chmod +x /usr/local/bin/docker-compose
+/> docker-compose --version
+
+https://docs.docker.com/compose/install/
