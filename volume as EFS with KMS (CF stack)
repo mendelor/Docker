@@ -1,0 +1,206 @@
+1. docker plugin install rexray/efs EFS_ACCESSKEY=AKIAQMD5VILJ2O3WAO7M EFS_SECRETKEY=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 EFS_SECURITYGROUPS=sg-0ac950645468548da  EFS_TAG=rexray
+2. docker volume create
+3. docker volume create --driver rexray/efs --name test-efs-1
+
+* I used credentials of serverless user
+
+#https://console.aws.amazon.com/support/home?region=us-east-2#/case/?displayId=7196704931&language=en
+#https://console.aws.amazon.com/support/home?region=us-east-2#/case/?displayId=7205948301&language=en
+
+#aws efs describe-file-systems --query FileSystems[*].FileSystemId --output text
+#aws efs describe-mount-targets --file-system-id fs-e33b3ac2 --query MountTargets[*].MountTargetId
+#aws efs describe-mount-target-security-groups --mount-target-id fsmt-98f770b9
+
+
+AWSTemplateFormatVersion: 2010-09-09
+Parameters:
+
+#  CIDRSubnet2:
+#    Description: Enter the CIDR Range for your VPC
+#    Type: String
+#    MinLength: '9'
+#    MaxLength: '18'
+#    Default: 10.10.2.0/24     #CIDRSubnet1   10.10.1.0/24
+#    AllowedPattern: "(\\d{1,3})\\.(\\d{1,3})\\.(\\d{1,3})\\.(\\d{1,3})/(\\d{1,2})"
+#    ConstraintDescription: must be a valid IP CIDR range of the form x.x.x.x/x.
+
+#  CIDRVPC:
+#    Description: Enter the CIDR Range for your VPC
+#    Type: String
+#    MinLength: '9'
+#    MaxLength: '18'
+#    Default: 10.10.0.0/16
+#    AllowedPattern: "(\\d{1,3})\\.(\\d{1,3})\\.(\\d{1,3})\\.(\\d{1,3})/(\\d{1,2})"
+#    ConstraintDescription: must be a valid IP CIDR range of the form x.x.x.x/x.
+
+  EFSNameTag:
+    Description: The name of the EFS volume
+    Type: String
+    MinLength: '1'
+    Default: myEFSvolume
+
+
+  VPC:
+    Description: Choose your VPC
+    Type: AWS::EC2::VPC::Id
+
+Resources: ###########################################
+  FileSystem:
+    Type: 'AWS::EFS::FileSystem'
+    Properties:
+      PerformanceMode: maxIO
+      Encrypted: true
+      LifecyclePolicies:
+        - TransitionToIA: AFTER_30_DAYS
+      FileSystemTags:
+        - Key: Name
+          Value: TestFileSystem
+      FileSystemPolicy:               ##### -> Modify indent
+        Version: "2012-10-17"    ##### -> Modify indent
+        Statement:
+          - Effect: "Allow"
+            Action:
+              - "elasticfilesystem:ClientMount"
+            Principal:                        ##### -> Add AWS: ....
+              AWS: !Join
+                - ''
+                - - 'arn:aws:iam::'
+                  - !Ref 'AWS::AccountId'
+                  - ':root'
+      KmsKeyId: !GetAtt
+        - key
+        - Arn
+  key:
+    Type: AWS::KMS::Key
+    Properties:
+      KeyPolicy:
+        Version: 2012-10-17
+        Id: key-default-1
+        Statement:
+          - Sid: Allow administration of the key
+            Effect: Allow
+            Principal:
+              AWS: !Join
+                - ''
+                - - 'arn:aws:iam::'
+                  - !Ref 'AWS::AccountId'
+                  - ':root'
+            Action:
+              - 'kms:*'
+            Resource: '*'
+        ##### ->  Remove AWS: "*"
+#      FileSystemPolicy:
+#        Version: "2012-10-17"
+#        Statement:
+#          - Effect: "Allow"
+#            Action:
+#              - "elasticfilesystem:ClientMount"
+#            Principal:'arn:aws:iam::111122223333:root'
+#      KmsKeyId: !GetAtt
+#        - key
+#        - Arn
+#  key:
+#    Type: AWS::KMS::Key
+#    Properties:
+#      KeyPolicy:
+#        Version: 2012-10-17
+#        Id: key-default-1
+#        Statement:
+#          - Sid: Allow administration of the key
+#            Effect: Allow
+#            Principal:
+#              AWS: !Join
+#                - ''
+#                - - 'arn:aws:iam::'
+#                  - !Ref 'AWS::AccountId'
+#                  - ':root'
+#            Action:
+#              - 'kms:*'
+#            Resource: '*'
+#            AWS: "*"
+
+  MountTarget:
+    Type: AWS::EFS::MountTarget
+    Properties:
+      FileSystemId:
+        Ref: FileSystem
+      SubnetId: subnet-60786b08
+#        Ref: Subnet1
+      SecurityGroups:
+      - Ref: MountTargetSecurityGroup
+  MountTarget2:
+    Type: AWS::EFS::MountTarget
+    Properties:
+      FileSystemId:
+        Ref: FileSystem
+      SubnetId: subnet-823988ce
+#        Ref: Subnet2
+      SecurityGroups:
+      - Ref: MountTargetSecurityGroup
+
+
+  MountTargetSecurityGroup:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      VpcId:
+        Ref: VPC
+      GroupDescription: Security group for mount target
+      SecurityGroupIngress:
+      - IpProtocol: tcp
+        FromPort: '2049'
+        ToPort: '2049'
+        CidrIp: 0.0.0.0/0
+  #        Ref: CIDRVPC
+
+
+
+#  VPC:
+#    Type: AWS::EC2::VPC
+#    Properties:
+#      CidrBlock:
+#        Ref: CIDRVPC
+#      EnableDnsSupport: true
+#      EnableDnsHostnames: true
+#      Tags:
+#      - Key: Name
+#        Value: EFS-ECS Demo VPC
+
+#  MountTargetSubnetOne:
+#    Type: AWS::EC2::Subnet
+#    Properties:
+#      CidrBlock: 172.31.1.0/24
+#      VpcId: !Ref VPC
+#      AvailabilityZone: "us-east-2a"
+
+#  MountTargetSubnetTwo:
+#    Type: AWS::EC2::Subnet
+#    Properties:
+#      CidrBlock: 172.31.2.0/24
+#      VpcId: !Ref VPC
+#      AvailabilityZone: "us-east-2b"
+
+
+
+
+
+Outputs:
+
+  FileSystemId:
+    Description: The FileSystem ID number
+    Value: !Ref FileSystem
+    Export:
+      Name: !Sub '${AWS::StackName}FileSystemId'
+
+  MountTargetSecurityGroup:
+    Description: The Group ID for the FileSystem Mount Targets Security Group
+    Value: !GetAtt MountTargetSecurityGroup.GroupId
+    Export:
+      Name: MountTargetSecurityGroupId
+
+#  MountTarget1:
+#    Description: The Resource ID for the first FileSystem Mount Target
+#    Value: !Ref MountTarget
+#    Export:
+#      Name: !Sub
+#        - '${AWS::StackName}${FileSystemName}MountTarget1'
+#        - { FileSystemName: !If [hasFsTags, !Ref FileSystemName, "FileSystem"] }
