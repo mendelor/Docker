@@ -2,3 +2,10 @@ Dive:    https://github.com/wagoodman/dive
 wget https://github.com/wagoodman/dive/releases/download/v0.9.1/dive_0.9.1_linux_amd64.deb
 sudo apt install ./dive_0.9.1_linux_amd64.deb
 dive <your-image-tag>
+
+
+------------------------------------
+
+Time:
+To measure the time takes to build an image
+// time docker build -t <image name> .
