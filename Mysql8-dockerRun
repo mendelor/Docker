@@ -1,0 +1,10 @@
+$ docker network create db_network
+$ docker run -d \
+--name mysql80 \
+--publish 3306 \
+--network db_network \
+--restart unless-stopped \
+--env MYSQL_ROOT_PASSWORD=mypassword \
+--volume mysql80-datadir:/var/lib/mysql \
+mysql:8 \
+--default-authentication-plugin=mysql_native_password
