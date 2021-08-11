@@ -133,3 +133,14 @@ nginx -g 'daemon off;'; nginx -s reload;
 
 Try with Bret fisher's compose
 https://github.com/BretFisher/compose-dev-tls/blob/main/docker-compose.yaml
+
+
+
+
+
+
+
+
+
+Reverse Proxy (example):
+https://www.thepolyglotdeveloper.com/2017/03/nginx-reverse-proxy-containerized-docker-applications/
