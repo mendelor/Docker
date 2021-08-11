@@ -1,0 +1,94 @@
+MSSQL on Ubuntu server
+------------------------
+
+https://stackoverflow.com/questions/147659/get-list-of-databases-from-sql-server
+
+WITH VOLUME:
+https://stackoverflow.com/questions/63133630/is-it-possible-to-create-a-volume-with-microsoft-sql-server-docker-container
+https://docs.microsoft.com/en-us/sql/linux/sql-server-linux-configure-docker?view=sql-server-ver15#tools-outside-the-container
+
+
+docker run -e 'ACCEPT_EULA=Y' -e 'SA_PASSWORD=1d6ac2f01Q' -e 'MSSQL_PID=Express' -p 1433:1433 -d mcr.microsoft.com/mssql/server:2017-latest-ubuntu
+
+docker exec -it 2df885805ffb /opt/mssql-tools/bin/sqlcmd -S 18.224.147.172 -U SA -P qwertY12@3
+
+
+https://hub.docker.com/_/microsoft-mssql-server
+
+
+<Inside the Container>:
+
+EXEC sp_databases
+GO
+
+USE TestDB
+GO
+
+CREATE TABLE aaa (name varchar(20))
+GO
+
+
+
+
+----------------------
+I had an issue with the password
+
+https://docs.microsoft.com/en-us/sql/linux/sql-server-linux-docker-container-deployment?view=sql-server-ver15&pivots=cs1-bash
+
+version: '3.7'
+services:
+  db:
+    image: microsoft/mssql-server-linux
+    environment:
+        SA_PASSWORD_FILE: /run/secrets/my_file_secret
+        ACCEPT_EULA: Y
+    secrets:
+      - my_file_secret
+    ports:
+        - '1433:1433'
+
+secrets:
+  my_file_secret:
+    file: ./my_file_secret.txt
+
+
+https://blog.dbi-services.com/managing-sql-server-sa-credentials-with-docker-secrets-on-swarm/
+echo "mypass1234" | docker secret create mysql_pass
+
+
+version: '3.7'
+services:
+  db:
+    image: microsoft/mssql-server-linux
+    environment:
+        SA_PASSWORD_FILE: /run/secrets/mysql_pass
+        ACCEPT_EULA: Y
+    secrets:
+      - mysql_pass
+    ports:
+        - '1433:1433'
+
+secrets:
+  my_file_secret:
+    file: ./mysql_pass
+
+
+
+
+
+printf "mySecretPassword" | docker secret create mssql_sa_password  -
+
+version: '3.7'
+services:
+  db:
+    image: microsoft/mssql-server-linux
+    environment:
+        SA_PASSWORD_FILE: /run/secrets/mssql_sa_password
+        ACCEPT_EULA: Y
+    secrets:
+      - mssql_sa_password
+    ports:
+        - '1433:1433'
+secrets:
+  mssql_sa_password:
+    external: true
