@@ -1,0 +1,114 @@
+https://levelup.gitconnected.com/set-up-a-nginx-load-balancer-for-a-dockerized-node-js-application-6bff1a54655a
+https://medium.com/@aagamvadecha/hello-men-kte-51f682a408f7
+
+
+On Ubuntu server:
+
+// sudo apt install npm
+// npm init --save
+
+// npm install init --save
+// npm install express --save
+// touch package.json
+// npm init --save  (enter,enter,enter...)
+--------------------------------------
+
+ app.js:
+ -------
+const express = require('express')
+const app = express()
+const port = 5000
+const name = process.env.name || "World"
+
+    app.get('/', (req, res) => {
+        res.send(`Hello ${name} !`)
+    })
+app.listen(port, () => {
+    console.log(`Server Started on Port  ${port}`)
+})
+--------------------------------------
+dockerile:
+----------
+FROM node
+WORKDIR /app
+COPY package.json .
+RUN npm install
+COPY . .
+CMD node app.js
+EXPOSE 5000
+--------------------------------------
+// docker build -t nodeapp:001 .
+// docker container run -p 5001:5000 --name helloworld -d nodeapp:001
+// docker container run -p 5002:5000 --name customized -e "name=aagam" -d nodeapp:001
+--------------------------------------
+dockerfile:
+----------
+FROM nginx
+RUN rm /etc/nginx/conf.d/default.conf
+COPY nginx.conf /etc/nginx/conf.d/default.conf
+--------------------------------------
+nginx.conf:
+-----------
+upstream loadbalance {
+    least_conn;
+    server 18.218.210.112:5001;
+    server 18.218.210.112:5002;
+}
+
+server {
+    location / {
+        proxy_pass http://loadbalance;
+    }
+}
+--------------------------------------
+// docker build -t nginxbalancer:001 .
+// docker container run -p 5000:80 -d nginxbalancer:001
+
+
+18.218.210.112:5000    port 5000 is the load balancer
+18.218.210.112:5001
+18.218.210.112:5002
+
+
+SWARM SWARM SWARM SWARM SWARM SWARM SWARM SWARM SWARM SWARM SWARM SWARM
+=========================================================================
+Another Good example for proxy:   https://levelup.gitconnected.com/load-balance-and-scale-node-js-containers-with-nginx-and-docker-swarm-9fc97c3cff81
+=========================================================================
+version: '3'
+
+services:
+  nodeapp:
+   image: aagam29/nodeapp_balancerdemo
+   ports:
+     - 5000:5000
+   deploy:
+     replicas: 15
+     restart_policy:
+       max_attempts: 3
+       condition: on-failure
+     update_config:
+       parallelism: 3
+       delay: 10s
+   networks:
+    - balance
+
+  proxy:
+    image: aagam29/nginx_balancerdemo
+    ports:
+      - 80:80
+    depends_on:
+      - nodeapp
+    deploy:
+      placement:
+        constraints: [node.role == node1]   node1 = ip-172-31-31-241
+    networks:
+      - balance
+
+networks:
+  balance:
+    driver: overlay
+----
+
+// docker stack deploy -c docker-compose.yml swarmnodeapp
+// docker service ls   -OR-  docker service ps <servicename>
+// docker container ls
