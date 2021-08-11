@@ -1,0 +1,26 @@
+Go:
+
+
+Installation:
+https://github.com/golang/go/wiki/Ubuntu
+
+$ sudo add-apt-repository ppa:longsleep/golang-backports
+$ sudo apt update
+$ sudo apt install golang-go
+
+/> go version
+
+
+https://gobyexample.com/hello-world
+/> vim hello-world.go
+package main
+import "fmt"
+func main() {
+    fmt.Println("hello world")
+}
+/>  go run hello-world.go
+
+
+
+https://codefresh.io/docs/docs/learn-by-example/golang/golang-hello-world/
+https://github.com/codefresh-contrib/golang-sample-app
