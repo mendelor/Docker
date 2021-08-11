@@ -1,1 +1,4 @@
 https://sysdig.com/blog/dockerfile-best-practices/
+
+Docker Linter:
+https://hadolint.github.io/hadolint/
