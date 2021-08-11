@@ -52,3 +52,4 @@ console.log(`Running on http://${HOST}:${PORT}`);
 
 /> docker build -t node .
 /> docker run -d -p 8080:8080 node 
+/> docker run -d -p 8081:8080 node                      (in caseport 8080 is already allocated
