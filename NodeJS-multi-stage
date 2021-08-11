@@ -1,17 +1,14 @@
-<Multi stage NodeJS> 
+Multi stage NodeJS: 
+------------------
 
 FROM node:12 AS builder
-
 # Create app directory
 WORKDIR /usr/src/app
 COPY package*.json ./
 COPY . .
 
 FROM node:12-slim
-
-
 EXPOSE 8080
-
 COPY --from=builder /usr/src/app ./
 RUN npm install --production
 USER node
