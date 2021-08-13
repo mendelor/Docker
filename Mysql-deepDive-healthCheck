@@ -1,0 +1,107 @@
+https://github.com/docker-library/mysql
+
+
+
+**To add ifferent files create a directory
+
+
+FROM php:7.2.2-apache
+COPY ./mydirectory/ /var/www/html
+RUN docker-php-ext-install mysqli
+
+HEALTHCHECK CMD curl --fail http://18.218.210.112:8080/ || exit 1
+
+------------------------------------------------------echo "1234" > my_file_secret.txt
+                                                      docker-compose up -d --build                       (in case you'd like to build it again)
+                                                      docker container exec -it <containerID> /bin/bash
+                                                      mysql -uroot -p
+version: '3.7'
+services:
+  web:
+    build:
+      context: "."
+      dockerfile: ./Dockerfile
+    container_name: web
+    depends_on:
+      - db
+    ports:
+      - "80:80"
+
+  db:
+    image: "mysql:8"  
+    volumes:
+      - ./init.sql:/docker-entrypoint-initdb.d/init.sql
+      - data-mysql:/var/lib/mysql
+    ports:
+      - '3306:3306'
+    healthcheck:
+      test: ["CMD-SHELL", 'mysqladmin ping']
+      interval: 10s
+      timeout: 5s
+      retries: 10
+    environment:
+      MYSQL_ROOT_PASSWORD_FILE: /run/secrets/my_file_secret
+    secrets:
+      - my_file_secret
+
+secrets:
+  my_file_secret:
+    file: ./my_file_secret.txt
+
+volumes:
+  data-mysql:
+    driver: local
+
+====================================docker-compose up -d
+
+init.sql:
+
+CREATE DATABASE demo;
+USE demo;
+CREATE TABLE users (
+    id INT NOT NULL PRIMARY KEY AUTO_INCREMENT,
+    username VARCHAR(50) NOT NULL UNIQUE,
+    password VARCHAR(255) NOT NULL,
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+);
+INSERT INTO users (username,password) VALUES ('user1',123), ('user2',234), ('user3',345);
+
+=====================================
+
+Dockerfile:
+
+FROM php:7.2.2-apache
+COPY ./mydirectory/ /var/www/html
+RUN docker-php-ext-install mysqli
+
+HEALTHCHECK CMD curl --fail http://18.218.210.112:8080/ || exit 1
+
+
+
+// echo "1234" > my_file_secret.txt
+=============================================================================
+
+<?php
+/* Database credentials. Assuming you are running MySQL
+server with default setting (user 'root' with no password) */
+define('DB_SERVER', '18.218.210.112');
+define('DB_USERNAME', 'root');
+define('DB_PASSWORD', '1234');
+define('DB_NAME', 'demo');
+
+/* Attempt to connect to MySQL database */
+$link = mysqli_connect(DB_SERVER, DB_USERNAME, DB_PASSWORD, DB_NAME);
+
+
+
+<?php
+/* Database credentials. Assuming you are running MySQL
+server with default setting (user 'root' with no password) */
+define('DB_SERVER', 'localhost');
+define('DB_USERNAME', 'root');
+define('DB_PASSWORD', '');
+define('DB_NAME', 'demo');
+
+/* Attempt to connect to MySQL database */
+$link = mysqli_connect(DB_SERVER, DB_USERNAME, DB_PASSWORD, DB_NAME);
+
