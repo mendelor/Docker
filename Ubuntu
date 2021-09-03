@@ -18,3 +18,6 @@ apt-get install -y iputils-ping
 
 ** Also nice example:   (replace the image to ubuntu:20.04
 https://github.com/codebarber/ansible-packer-terraform/blob/master/Dockerfile
+
+
+https://stackoverflow.com/questions/62638487/docker-how-to-share-ssh-keys-between-containers
