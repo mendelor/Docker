@@ -1,0 +1,27 @@
+FROM ubuntu:20.04
+WORKDIR /
+RUN apt update && apt install -y openssh-server sudo sed
+RUN sed -i "s/UsePAM yes/UsePAM no/g" /etc/ssh/sshd_config && sed -i "s/#PermitRootLogin prohibit-password/PermitRootLogin yes/g" /etc/ssh/sshd_config
+RUN echo "root:123456" | chpasswd
+RUN echo "root   ALL=(ALL)       ALL" >> /etc/sudoers
+# RUN ssh-keygen -t rsa -f /etc/ssh/ssh_host_rsa_key
+# RUN ssh-keygen -t ecdsa -f /etc/ssh/ssh_host_ecdsa_key
+# RUN ssh-keygen -t dsa -f /etc/ssh/ssh_host_dsa_key
+RUN mkdir /run/sshd
+# RUN mkdir /var/run/sshd
+EXPOSE 22
+CMD ["/usr/sbin/sshd", "-D"]
+
+
+/> docker build -t ssh1 . 
+/> docker build -t ssh1 . 
+/> docker run --net=network1 -itd ssh1
+
+inside a container 
+/> ssh root@192.168.0.3
+pass: 123456
+succeeded! 
+
+
+
+https://stackoverflow.com/questions/65914260/cant-ssh-localhost-within-docker
