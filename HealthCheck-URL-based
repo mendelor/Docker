@@ -1,0 +1,15 @@
+FROM nginx:1.17.7
+RUN apt-get update && apt-get install -y wget
+HEALTHCHECK CMD wget -q --method=HEAD localhost/system-status.txt
+
+/> docker build -t test . 
+/> docker run -d -p 8081:8080 test
+/> docker ps
+/> docker exec <container_id> sh -c 'echo OK > /usr/share/nginx/html/system-status.txt'
+/> docker commit 5d1e235b4bcb livereadyness 
+/> docker run -d -p 8081:8080 livereadyness
+/> docker ps                                                                                   (see if the container become healthy) 
+
+
+
+https://betterprogramming.pub/docker-healthchecks-eb744bfe3f3b
