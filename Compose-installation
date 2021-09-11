@@ -1,0 +1,7 @@
+< TO install or upgrade Docker-Compose  1.25.4 >  Buildkit support this version!
+
+Check the latest version first:  https://docs.docker.com/compose/compose-file/compose-versioning/
+
+sudo curl -L "https://github.com/docker/compose/releases/download/1.27.0/docker-compose-$(uname -s)-$(uname -m)" -o /usr/local/bin/docker-compose
+sudo chmod +x /usr/local/bin/docker-compose
+docker-compose --version
