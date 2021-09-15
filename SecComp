@@ -23,12 +23,14 @@ vim 1_chmod.json
             "action": "SCMP_ACT_ERRNO",
             "args": []
         },        {
-            "name": "kill",                                      This one I added and it won't let me to kill a process inside the container: ps; kill -9 <pid>
+            "name": "kill",                                      
             "action": "SCMP_ACT_ERRNO",
             "args": []
         }
     ]
 }
+
+** The Kill command I added and it won't let me to kill a process inside the container even I'm the root user: ps; kill -9 <pid>
 
 
 /> docker run --rm -it --security-opt seccomp:1_chmod.json alpine sh
@@ -40,4 +42,8 @@ vim 1_chmod.json
 
 https://learning.oreilly.com/scenarios/get-started-with/9781492061601/
 https://martinheinz.dev/blog/41
+
+
+K8s: 
+https://www.youtube.com/watch?v=OPuu8wsu2Zc
 https://kubernetes.io/docs/tutorials/clusters/seccomp/#:~:text=Seccomp%20stands%20for%20secure%20computing,from%20userspace%20into%20the%20kernel.
