@@ -1,0 +1,43 @@
+vim 1_chmod.json
+
+{
+    "defaultAction": "SCMP_ACT_ALLOW",
+    "architectures": [
+        "SCMP_ARCH_X86_64",
+        "SCMP_ARCH_X86",
+        "SCMP_ARCH_X32"
+    ],
+    "syscalls": [
+        {
+            "name": "chmod",
+            "action": "SCMP_ACT_ERRNO",
+            "args": []
+        },
+        {
+            "name": "chown",
+            "action": "SCMP_ACT_ERRNO",
+            "args": []
+        },
+        {
+            "name": "chown32",
+            "action": "SCMP_ACT_ERRNO",
+            "args": []
+        },        {
+            "name": "kill",                                      This one I added and it won't let me to kill a process inside the container: ps; kill -9 <pid>
+            "action": "SCMP_ACT_ERRNO",
+            "args": []
+        }
+    ]
+}
+
+
+/> docker run --rm -it --security-opt seccomp:1_chmod.json alpine sh
+/> cd etc && touch test.yml 
+/> chmod 400 test.yml  (Operation not permitted)
+/> rm -f test.yml      (permitted) 
+
+
+
+https://learning.oreilly.com/scenarios/get-started-with/9781492061601/
+https://martinheinz.dev/blog/41
+https://kubernetes.io/docs/tutorials/clusters/seccomp/#:~:text=Seccomp%20stands%20for%20secure%20computing,from%20userspace%20into%20the%20kernel.
