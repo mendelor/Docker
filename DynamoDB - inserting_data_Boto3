@@ -1,0 +1,111 @@
+https://medium.com/imaginelearning/getting-started-with-dynamodb-d147ed9e629e
+
+http://localhost:8000/shell/
+
+https://hub.docker.com/r/amazon/dynamodb-local
+
+
+
+/> docker run -p 8000:8000 amazon/dynamodb-local
+
+
+============================Create table========================================
+
+import boto3
+
+
+def create_movie_table(dynamodb=None):
+    if not dynamodb:
+        dynamodb = boto3.resource('dynamodb', endpoint_url="http://localhost:8000")
+
+    table = dynamodb.create_table(
+        TableName='Movies',
+        KeySchema=[
+            {
+                'AttributeName': 'year',
+                'KeyType': 'HASH'  # Partition key
+            },
+            {
+                'AttributeName': 'title',
+                'KeyType': 'RANGE'  # Sort key
+            }
+        ],
+        AttributeDefinitions=[
+            {
+                'AttributeName': 'year',
+                'AttributeType': 'N'
+            },
+            {
+                'AttributeName': 'title',
+                'AttributeType': 'S'
+            },
+
+        ],
+        ProvisionedThroughput={
+            'ReadCapacityUnits': 10,
+            'WriteCapacityUnits': 10
+        }
+    )
+    return table
+
+
+if __name__ == '__main__':
+    movie_table = create_movie_table()
+    print("Table status:", movie_table.table_status)
+
+https://docs.aws.amazon.com/amazondynamodb/latest/developerguide/GettingStarted.Python.01.html
+
+
+/> aws dynamodb list-tables --endpoint-url http://13.210.xxx.xxx:8000/
+
+
+
+https://docs.aws.amazon.com/cli/latest/reference/dynamodb/
+
+
+==========================Inserting data to DynamoDB============================
+
+
+import boto3
+import random
+from decimal import *
+
+
+def load_transactions(dynamodb):
+
+    table = dynamodb.Table('Movies')
+
+    trans = {}
+
+    trans['year'] = 2021
+    trans['title'] = 'this is a great title'
+
+    print(trans)
+
+    table.put_item(Item=trans)
+
+
+if __name__ == '__main__':
+
+
+    dynamodb = boto3.resource('dynamodb',  endpoint_url = "http://localhost:8000")
+
+    load_transactions(dynamodb)
+
+
+OUTPUT:
+{'year': 2021, 'title': 'this is a great title'}
+- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+
+=================retrieve data from Dynamodb table==============================
+
+
+import boto3
+
+dynamodb = boto3.resource('dynamodb', endpoint_url="http://localhost:8000")
+table = dynamodb.Table('Movies')
+response = table.scan()
+items = response['Items']
+
+# Prints All the Items at once
+print(items)
